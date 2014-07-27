@@ -11,17 +11,11 @@ class StreamListener(object):
     def on_connect(self):
         pass
     def on_data(self, raw_data):
-        b =[raw_data['id'],  #feed_id
-            raw_data['from']['name'], #uname
-            raw_data['from']['id'], #uid
-            raw_data['message'], #content
-            raw_data['actions'][0]['link'], #feed_url
-            raw_data['object_id'], #object_id
-            raw_data['created_time'], #created_time
-            raw_data['update_time'] ] #update_time
-        logging.error(b)
+        logging.error(raw_data.keys())
+        # test for print out.
 
 class Stream(object):
+    fb_api = None
     def __init__(self, auth, listener, **options):
         self.auth = auth
         self.listener = listener
@@ -46,16 +40,18 @@ class Stream(object):
 
     def _run(self):
         # Authenticate
-        url = "%s?%s" % (self.url, self.startTime)
+        args = { 'since' : self.start_time }
         resp = None
         exception = None
         while self.running:
             try:
             # get fb.request feeds + token
             # sleep 5mins
-                resp = host.request(url)
+                resp = self.fb_api.request(self.url, args)
             #self.listener.on_connect()
                 self._read_loop(resp['data'])
+                time.sleep(60)
+                start_time = int( time.time() )
             except Exception as exception:
                 # any exception is fatal, so kill loop.
                 break
@@ -65,7 +61,7 @@ class Stream(object):
 
         if exception:
             # call a hanlder first so that the exception can be logged.
-            self.listener.on_exception(exception)
+            #self.listener.on_exception(exception)
             raise
 
     def _data(self, data):
@@ -74,9 +70,9 @@ class Stream(object):
 
     def _read_loop(self, resp):
         # prase feed in feeds.
-        while self.running:
-            feed = resp.pop()
-            self._data(feed)
+        while resp:
+                feed = resp.pop()
+                self._data(feed)
 
 
     def _start(self, async):
@@ -91,12 +87,12 @@ class Stream(object):
         pass
     def userstream(self,**args):
         pass
-    def filter(self,follow=None, async=False, editd=False, delted=False, encoding='utf8'):
+    def filter(self,follow=None, async=False, edited=False, delted=False, encoding='utf8'):
         if self.running:
             pass  # *** there should raise ERROR like already connected. *** #
-        self.url = '/%s/me/home' & API_VERSION
-        self.host = facebook.GraphAPI(access_token = auth)
-        self.startTime = time.time()
+        self.url = '/%s/me/home' % API_VERSION
+        self.fb_api = facebook.GraphAPI(access_token = self.auth)
+        self.start_time = int( time.time() )
 
         if edited:
             pass
