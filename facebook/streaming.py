@@ -1,13 +1,14 @@
 import time
 import facebook
 import logging
+import anyjson
 
 API_VERSION = 'v2.0'
 
 class StreamListener(object):
 
     def __init__(self):
-        pass
+        print 'listener init'
     def on_connect(self):
         pass
     def on_data(self, raw_data):
